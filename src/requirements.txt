@@ -1,0 +1,7 @@
+azure.data.tables
+beautifulsoup4
+load_dotenv
+langchain-text-splitters
+openai
+requests
+tqdm
