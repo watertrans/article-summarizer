@@ -150,9 +150,12 @@ def get_summarize(url):
     messages = [{"role": "system", "content": """
         You are a professional editor. The text to be entered is an article about technology.
         The title should be translated in the output language.
-        Summarize the body text within 1000 characters.
-        Title and summary should be output as separate items.
-        Output should be in Japanese.
+        Summarize the body text within 1000 characters. Output should be in Japanese.
+        
+        Title and summary output should follow the following output format:
+        title: {output title}
+        summary: {output summary}
+        
         Please adhere to the following constraints:
         - The title is always output, not summarized.
         - Do not omit important keywords.
