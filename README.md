@@ -19,6 +19,7 @@ Posting to Slack would be useful, but is not yet implemented.
 ## Develop
 - Open the `src` folder in VSCode.
 - Use Command Palette (F1) to select `Dev Containers: Reopen in Container`.
+- Create a table named `summarizer` in local Azure Storage Emulator.
 - Start debugging using the `F5` key.
 
 ## Build
