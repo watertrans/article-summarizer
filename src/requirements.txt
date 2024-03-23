@@ -1,5 +1,6 @@
 azure.data.tables
 beautifulsoup4
+feedparser
 load_dotenv
 langchain-text-splitters
 openai

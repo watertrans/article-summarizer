@@ -1,3 +1,5 @@
+import feedparser
+import hashlib
 import logging
 import json
 import requests
@@ -87,13 +89,13 @@ def get_article(content):
     Extracts the text of an article from the specified HTML content and returns an array of text chunks. HTML content without an article tag return an empty array.
     """
     
-    soup = BeautifulSoup(content, 'html.parser')
-    article_content = soup.find('article')
+    soup = BeautifulSoup(content, "html.parser")
+    article_content = soup.find(["article", "main"])
 
     if article_content is None:
         return []
 
-    h1 = article_content.find('h1')
+    h1 = article_content.find("h1")
 
     if h1 is not None:
         h1_text = h1.get_text()
@@ -105,7 +107,7 @@ def get_article(content):
             t.decompose()
 
     # adding quotation marks to text within code or pre tags
-    code_tags = soup.find_all(['code', 'pre'])
+    code_tags = soup.find_all(["code", "pre"])
     for code_tag in code_tags:
         if '\n' in code_tag.text.strip():
             code_tag.string = f"\n'''code\n{code_tag.text.strip()}\n'''\n"
@@ -120,7 +122,7 @@ def get_article(content):
     text_chunks = text_splitter.split_text(article_content.get_text())
 
     if h1_text is not None:
-        text_chunks.insert(0, f"title:\n{h1_text}\narticle:\n")
+        text_chunks.insert(0, f"title: {h1_text}")
 
     return text_chunks
 
@@ -147,12 +149,15 @@ def get_summarize(url):
     client = OpenAI(api_key=api_key)
     messages = [{"role": "system", "content": """
         You are a professional editor. The text to be entered is an article about technology.
-        Please summarize the article in 1000 words or less. Output should be in Japanese.
+        The title should be translated in the output language.
+        Summarize the body text within 1000 characters.
+        Title and summary should be output as separate items.
+        Output should be in Japanese.
         Please adhere to the following constraints:
-        - Do not omit the title of the article at the beginning.
+        - The title is always output, not summarized.
         - Do not omit important keywords.
+        - Do not omit important dates.
         - Do not change the meaning of the text.
-        - Do not use fictitious expressions or words.
     """}]
     for text_chunk in text_chunks:
         logger.debug(f"text_chunk: {text_chunk}")
@@ -163,7 +168,9 @@ def get_summarize(url):
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=messages
+            messages=messages,
+            temperature=0,
+            max_tokens=1000
         )
         logger.debug(f"result: {response.choices[0].message.content}")
         return response.choices[0].message.content
@@ -197,24 +204,36 @@ def read_history(partition_key, row_key, url):
         logger.info(f"No previous summary records available: {url}")
         return None
 
+
+
 load_dotenv()
 logger = setup_logger("Article Summarizer")
 connection_string = os.getenv("STORAGE_CONNECTION_STRING")
 table_name = 'summarizer'
 table_client = TableClient.from_connection_string(connection_string, table_name)
 
-partition_key = "devblogs.microsoft.com"
-row_key = "dev-tunnels-a-game-changer-for-mobile-developers"
-url = "https://devblogs.microsoft.com/dotnet/dev-tunnels-a-game-changer-for-mobile-developers/"
+rss_url_env = os.getenv("RSS_URL")
 
-history = read_history(partition_key, row_key, url)
-
-if history is not None:
+if rss_url_env == "":
     exit(0)
 
-summarized_content = get_summarize(url)
+rss_urls = rss_url_env.split("|")
 
-write_history(partition_key, row_key, url, summarized_content)
-
-print(summarized_content)
-
+for rss_url in rss_urls:
+    i = 1
+    feed = feedparser.parse(rss_url)
+    if feed.status != 200:
+        logger.warning("Unable to read RSS Feed:" + rss_url)
+        continue
+    partition_key = hashlib.md5(feed.feed.title.encode('utf-8')).hexdigest()
+    for entry in feed.entries:
+        if i > 10:
+            break
+        i = i + 1
+        row_key = hashlib.md5(entry.id.encode('utf-8')).hexdigest()
+        history = read_history(partition_key, row_key, entry.link)
+        if history is not None:
+            continue
+        summarized_content = get_summarize(entry.link)
+        write_history(partition_key, row_key, entry.link, summarized_content)
+        print(summarized_content)
