@@ -5,7 +5,7 @@ import json
 import requests
 import sys
 import os
-from azure.data.tables import TableClient
+from azure.data.tables import TableServiceClient
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -131,6 +131,7 @@ def get_summarize(url):
     Generates and returns a summary of the article at the specified URL.
     """
 
+    language = os.getenv("OUTPUT_LANGUAGE")
     api_key = os.getenv("API_KEY")
     logger.debug(f"url: {url}")
 
@@ -147,20 +148,21 @@ def get_summarize(url):
         return ""
 
     client = OpenAI(api_key=api_key)
-    messages = [{"role": "system", "content": """
+    messages = [{"role": "system", "content": f"""
         You are a professional editor. The text to be entered is an article about technology.
-        The title should be translated in the output language.
-        Summarize the body text within 1000 characters. Output should be in Japanese.
-        
-        Title and summary output should follow the following output format:
-        title: {output title}
-        summary: {output summary}
+        The title should be translate without summary.
+        The body should be summarize and translate within 1000 words.
         
         Please adhere to the following constraints:
         - The title is always output, not summarized.
         - Do not omit important keywords.
         - Do not omit important dates.
         - Do not change the meaning of the text.
+        - Translate to {language} language whenever possible.
+
+        Output must be in the following output formats:
+        title: {{output title}}
+        summary: {{output summary}}
     """}]
     for text_chunk in text_chunks:
         logger.debug(f"text_chunk: {text_chunk}")
@@ -204,7 +206,7 @@ def read_history(partition_key, row_key, url):
         entity = table_client.get_entity(partition_key=partition_key, row_key=row_key)
         return entity
     except Exception as e:
-        logger.info(f"No previous summary records available: {url}")
+        logger.debug(f"No previous summary records available: {url}")
         return None
 
 
@@ -213,7 +215,8 @@ load_dotenv()
 logger = setup_logger("Article Summarizer")
 connection_string = os.getenv("STORAGE_CONNECTION_STRING")
 table_name = 'summarizer'
-table_client = TableClient.from_connection_string(connection_string, table_name)
+table_service_client = TableServiceClient.from_connection_string(connection_string)
+table_client = table_service_client.create_table_if_not_exists(table_name)
 
 rss_url_env = os.getenv("RSS_URL")
 
@@ -239,4 +242,4 @@ for rss_url in rss_urls:
             continue
         summarized_content = get_summarize(entry.link)
         write_history(partition_key, row_key, entry.link, summarized_content)
-        print(summarized_content)
+        logger.info(summarized_content)

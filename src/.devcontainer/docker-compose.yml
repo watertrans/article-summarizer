@@ -13,12 +13,12 @@ services:
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     ports:
-      - "10000:10000"  # Blob Service Port
-      - "10001:10001"  # Queue Service Port
-      - "10002:10002"  # Table Service Port
+      - "127.0.0.1::10000"  # Blob Service Port
+      - "127.0.0.1::10001"  # Queue Service Port
+      - "127.0.0.1::10002"  # Table Service Port
     volumes: 
-      - azuritedata:/data
+      - articlesummarizerdata:/data
 
 volumes:
-  azuritedata:
+  articlesummarizerdata:
     driver: local

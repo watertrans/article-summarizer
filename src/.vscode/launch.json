@@ -9,6 +9,7 @@
             "console": "integratedTerminal",
             "env": {
                 "LOG_LEVEL": "INFO",
+                "OUTPUT_LANGUAGE": "Japanese",
                 "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;",
                 "RSS_URL": "https://azurecomcdn.azureedge.net/en-us/updates/feed/|https://aws.amazon.com/jp/about-aws/whats-new/recent/feed/"
             }

@@ -19,8 +19,9 @@ Posting to Slack would be useful, but is not yet implemented.
 ## Develop
 - Open the `src` folder in VSCode.
 - Use Command Palette (F1) to select `Dev Containers: Reopen in Container`.
-- Create a table named `summarizer` in local Azure Storage Emulator.
+- Create an .env file in the src directory and define API_KEY. (API_KEY={api_key})
 - Start debugging using the `F5` key.
+- The results are stored in a table named `summarizer` in the local Azure Storage Emulator. (Use of ephemeral ports)
 
 ## Build
 `docker build --tag article-summarizer .`
