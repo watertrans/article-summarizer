@@ -209,10 +209,43 @@ def read_history(partition_key, row_key, url):
         logger.debug(f"No previous summary records available: {url}")
         return None
 
+def validate_config():
+    rss_url = os.getenv("RSS_URL")
 
+    if not rss_url:
+        logger.error("Define the RSS_URL environment variable")
+        exit(0)
 
-load_dotenv()
+    logger.debug(f"environment variable: RSS_URL={rss_url}")
+
+    storage_connection_string = os.getenv("STORAGE_CONNECTION_STRING")
+
+    if not storage_connection_string:
+        logger.error("Define the STORAGE_CONNECTION_STRING environment variable")
+        exit(0)
+
+    logger.debug(f"environment variable: STORAGE_CONNECTION_STRING={storage_connection_string}")
+
+    output_language = os.getenv("OUTPUT_LANGUAGE")
+
+    if not output_language:
+        logger.error("Define the OUTPUT_LANGUAGE environment variable")
+        exit(0)
+
+    logger.debug(f"environment variable: OUTPUT_LANGUAGE={output_language}")
+
+    api_key = os.getenv("API_KEY")
+
+    if not api_key:
+        logger.error("Define the API_KEY environment variable")
+        exit(0)
+
+    logger.debug(f"environment variable: API_KEY={api_key}")
+
+load_dotenv(override=True)
 logger = setup_logger("Article Summarizer")
+validate_config()
+
 connection_string = os.getenv("STORAGE_CONNECTION_STRING")
 table_name = 'summarizer'
 table_service_client = TableServiceClient.from_connection_string(connection_string)
