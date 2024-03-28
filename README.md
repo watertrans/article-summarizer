@@ -27,4 +27,4 @@ Posting to Slack would be useful, but is not yet implemented.
 `docker build --tag article-summarizer .`
 
 ## Run
-`docker run -e STORAGE_CONNECTION_STRING={connection_string} -e RSS_URL={rss_url_1|rss_url_2|rss_url_3} -e API_KEY={api_key} -it --rm article-summarizer`
+`docker run -e STORAGE_CONNECTION_STRING="{connection_string}" -e RSS_URL="{rss_url_1|rss_url_2|rss_url_3}" -e API_KEY="{api_key}" -e OUTPUT_LANGUAGE="{language}" -it --rm article-summarizer`
