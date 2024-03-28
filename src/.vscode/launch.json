@@ -8,10 +8,11 @@
             "program": "app.py",
             "console": "integratedTerminal",
             "env": {
-                "API_KEY": "OPEN_AI_API_KEY",
+                "API_KEY": "",
                 "LOG_LEVEL": "DEBUG",
                 "OUTPUT_LANGUAGE": "Japanese",
                 "RSS_URL": "https://azurecomcdn.azureedge.net/en-us/updates/feed/|https://aws.amazon.com/jp/about-aws/whats-new/recent/feed/",
+                "SLACK_WEBHOOK_URL": "",
                 "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
             }
         }

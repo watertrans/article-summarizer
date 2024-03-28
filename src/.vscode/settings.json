@@ -5,6 +5,7 @@
         "langchain",
         "levelname",
         "levelno",
+        "mrkdwn",
         "openai"
     ]
 }

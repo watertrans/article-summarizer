@@ -5,11 +5,13 @@ import json
 import requests
 import sys
 import os
+import time
 from azure.data.tables import TableServiceClient
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from openai import OpenAI
+from slack_sdk.webhook import WebhookClient
 
 class JSONFormatter(logging.Formatter):
     def format(self, record):
@@ -209,6 +211,59 @@ def read_history(partition_key, row_key, url):
         logger.debug(f"No previous summary records available: {url}")
         return None
 
+def send_slack(webhook_url, url, content, date):
+    """
+    Notification to Slack.
+    """
+    
+    webhook = WebhookClient(webhook_url)
+
+    if "title:" in content and "summary:" in content:
+        split_content = content.split("summary:", 1)
+        header = split_content[0].replace("title:", "").strip()
+        body = split_content[1].strip()
+    else:
+        header = ""
+        body = content.strip()
+
+    try:
+        response = webhook.send(
+            blocks=[
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": header
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": body
+                    }
+                },
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "plain_text",
+                            "text": "published: " + time.strftime('%Y-%m-%d %H:%M', date)
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": url
+                        }
+                    ]
+                }
+            ]
+        )
+    except Exception as e:
+        logger.error("Notification to Slack failed", exc_info=True)
+
 def validate_config():
     rss_url = os.getenv("RSS_URL")
 
@@ -252,27 +307,35 @@ table_service_client = TableServiceClient.from_connection_string(connection_stri
 table_client = table_service_client.create_table_if_not_exists(table_name)
 
 rss_url_env = os.getenv("RSS_URL")
-
-if rss_url_env == "":
-    exit(0)
-
 rss_urls = rss_url_env.split("|")
+slack_webhook_url_env = os.getenv("SLACK_WEBHOOK_URL")
+if not slack_webhook_url_env:
+    slack_webhook_url_env = ""
+slack_webhook_urls = slack_webhook_url_env.split("|")
 
-for rss_url in rss_urls:
-    i = 1
+for rss_index, rss_url in enumerate(rss_urls):
+    count = 1
     feed = feedparser.parse(rss_url)
     if feed.status != 200:
         logger.warning("Unable to read RSS Feed:" + rss_url)
         continue
+    
+    if len(slack_webhook_urls) <= rss_index:
+        slack_webhook = slack_webhook_urls[0]
+    else:
+        slack_webhook = slack_webhook_urls[rss_index]
+
     partition_key = hashlib.md5(feed.feed.title.encode('utf-8')).hexdigest()
     for entry in feed.entries:
-        if i > 10:
+        if count > 10:
             break
-        i = i + 1
+        count = count + 1
         row_key = hashlib.md5(entry.id.encode('utf-8')).hexdigest()
         history = read_history(partition_key, row_key, entry.link)
         if history is not None:
             continue
         summarized_content = get_summarize(entry.link)
+        if slack_webhook:
+            send_slack(slack_webhook, entry.link, summarized_content, entry.published_parsed)
         write_history(partition_key, row_key, entry.link, summarized_content)
         logger.info(summarized_content)

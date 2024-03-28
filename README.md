@@ -1,7 +1,7 @@
 # article-summarizer
-RSS articles can be summarized by OpenAI.
+This application summarizes blog articles using OpenAI.
 The summarized results are stored in Azure Table Storage.
-Posting to Slack would be useful, but is not yet implemented.
+Additionally, it can also send notifications via Slack WebHook.
 
 ## Prerequisites
 - Windows 10 64-bit or Windows 11 64-bit.
@@ -27,4 +27,5 @@ Posting to Slack would be useful, but is not yet implemented.
 `docker build --tag article-summarizer .`
 
 ## Run
-`docker run -e STORAGE_CONNECTION_STRING="{connection_string}" -e RSS_URL="{rss_url_1|rss_url_2|rss_url_3}" -e API_KEY="{api_key}" -e OUTPUT_LANGUAGE="{language}" -it --rm article-summarizer`
+`docker run -e STORAGE_CONNECTION_STRING="{connection_string}" -e RSS_URL="{rss_url_1|rss_url_2|rss_url_3}" -e API_KEY="{api_key}" -e OUTPUT_LANGUAGE="{language}" -e SLACK_WEBHOOK_URL="{webhook_url_1|webhook_url_2|webhook_url_3}" -it --rm article-summarizer`
+

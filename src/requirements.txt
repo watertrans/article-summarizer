@@ -5,4 +5,5 @@ load_dotenv
 langchain-text-splitters
 openai
 requests
+slack_sdk
 tqdm
